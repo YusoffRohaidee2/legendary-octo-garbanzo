@@ -272,7 +272,6 @@
     await shakaPlayer.unload();
 
     if (item.type === "dash") {
-      // Configure DRM
       if (item.key) {
         shakaPlayer.configure({
           drm: { clearKeys: item.key }
@@ -300,6 +299,48 @@
 
   document.addEventListener('DOMContentLoaded', initApp);
 </script>
+
+<!-- AUTO-DETECT TRACKER LINKS (Disediakan khas untuk skrip pengesan automatik) -->
+<!-- 
+/channel/bein1_au1.mpd
+/channel/bein1_au2.mpd
+/channel/bein2_au1.mpd
+/channel/bein2_au2.mpd
+/channel/bein3_au1.mpd
+/channel/bein3_au2.mpd
+/channel/bein1_my.mpd
+/channel/bein2_my.mpd
+/channel/bein3_my.mpd
+/channel/bein4_my.mpd
+/channel/tsn1.mpd
+/channel/tsn2.mpd
+/channel/tsn3.mpd
+/channel/tsn4.mpd
+/channel/tsn5.mpd
+/channel/ufc1.m3u8
+/channel/ufc2.mpd
+/channel/motogp_usa.mpd
+/channel/tnt_sports2.mpd
+/channel/spotv2_my.mpd
+/channel/spotv2_pldt.mpd
+https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd
+https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd
+https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd
+https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd
+https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd
+https://a83aivottlinear-a.akamaihd.net/OTTB/syd-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd
+https://ptv2026.com/myunifi.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/dash/enc/w0rehjjrwe/out/v1/69a2a7041395406b970598f61680e7cf/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cjglydxghe/out/v1/8977baf175da4b94873194613dd3fe55/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/lsibpqruq1/out/v1/748887d614a84913ba8bcdf3c82823e6/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/ihys8nw4wv/out/v1/fde190f369484bc6b6117cc16cd82a9f/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cscevwljkq/out/v1/972185041b244140860b7d56398e9aaf/cenc.mpd
+https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist_1920x1080.m3u8
+https://a151aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/8mxwjnh2te/out/v1/356704796c0c4bed81f67cd3518d0c8a/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/wjeweupwyc/out/v1/8197c8e055c94a868623653ac55c10bf/cenc.mpd
+https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/puehlftk5j/out/v1/f7f0da1ee112481ca0024e6d4dd97f4a/cenc.mpd
+https://qp-pldt-live-grp-13-prod.akamaized.net/out/u/dr_spotv2hd.mpd
+-->
 
 </body>
 </html>
