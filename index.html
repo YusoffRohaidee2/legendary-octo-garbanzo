@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPTV Full Sports Player</title>
-  
-  <!-- Shaka Player CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
-  <!-- HLS.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title>TNT Sports Player (Video.js ClearKey)</title>
 
+  <!-- Video.js CSS -->
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -29,10 +27,10 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    video {
+    .video-js {
       width: 100%;
+      height: auto;
       aspect-ratio: 16 / 9;
-      background-color: #000;
       border-radius: 8px;
     }
     .controls {
@@ -70,39 +68,16 @@
 <body>
 
 <div class="player-container">
-  <h2>IPTV All Channels (DRM & User-Agent Configured)</h2>
-  <video id="video" controls autoplay></video>
+  <h2>TNT Sports Channels (Video.js ClearKey DRM)</h2>
+  
+  <video id="tnt-player" class="video-js vjs-default-skin" controls autoplay preload="auto"></video>
 
   <div class="controls">
     <select id="channelSelect">
-      <!-- beIN Sports Australia -->
-      <option value="bein1_au1">beIN Sports 1 Australia (Server 1)</option>
-      <option value="bein1_au2">beIN Sports 1 Australia (Server 2)</option>
-      <option value="bein2_au1">beIN Sports 2 Australia (Server 1)</option>
-      <option value="bein2_au2">beIN Sports 2 Australia (Server 2)</option>
-      <option value="bein3_au1">beIN Sports 3 Australia (Server 1)</option>
-      <option value="bein3_au2">beIN Sports 3 Australia (Server 2)</option>
-
-      <!-- beIN Sports Malaysia -->
-      <option value="bein1_my">beIN Sports 1 Malaysia FHD</option>
-      <option value="bein2_my">beIN Sports 2 Malaysia FHD</option>
-      <option value="bein3_my">beIN Sports 3 Malaysia FHD</option>
-      <option value="bein4_my">beIN Sports 4 Malaysia FHD</option>
-
-      <!-- TSN Channels -->
-      <option value="tsn1">TSN 1 FHD</option>
-      <option value="tsn2">TSN 2 FHD</option>
-      <option value="tsn3">TSN 3 FHD</option>
-      <option value="tsn4">TSN 4 FHD</option>
-      <option value="tsn5">TSN 5 FHD</option>
-
-      <!-- Combat & Racing -->
-      <option value="ufc1">UFC Fight Pass 24/7 (Server 1 - HLS)</option>
-      <option value="ufc2">UFC Fight Pass 24/7 (Server 2 - DASH)</option>
-      <option value="motogp_usa">MotoGP Channel USA</option>
-      <option value="tnt_sports2">TNT Sports 2 UK</option>
-      <option value="spotv2_my">SPOTV 2 HD (Unifi)</option>
-      <option value="spotv2_pldt">SPOTV 2 HD (PLDT)</option>
+      <option value="tnt1">TNT Sports 1</option>
+      <option value="tnt2">TNT Sports 2</option>
+      <option value="tnt3">TNT Sports 3</option>
+      <option value="tnt4">TNT Sports 4</option>
     </select>
     <button onclick="playSelectedChannel()">Mainkan</button>
   </div>
@@ -110,237 +85,90 @@
   <div class="info" id="channelInfo"></div>
 </div>
 
+<!-- Video.js JS -->
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<!-- Video.js EME Plugin (Untuk DRM / ClearKey) -->
+<script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@5.4.0/dist/videojs-contrib-eme.min.js"></script>
+
 <script>
-  let shakaPlayer;
-  let hlsPlayer;
+  // Format ClearKey Hex ke Base64URL untuk standard EME Video.js
+  function hexToBase64Url(hexStr) {
+    const bytes = new Uint8Array(hexStr.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
 
-  // SENARAI PENUH SALURAN: URL + USER-AGENT + CLEARKEY (KID : KEY)
+  // Data Saluran TNT Sports
   const channels = {
-    // === beIN Sports Australia ===
-    "bein1_au1": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "335dad778109954503dcbb21dc92015f": "24bfd75d436cbf73168a2a2dccd40281" }
+    "tnt1": {
+      name: "TNT Sports 1",
+      url: "https://otte.cache.aiv-cdn.net/iad-nitro/live/clients/dash/enc/rhf2dwosdt/out/v1/ee550d2a68d846c797e6ce4de2e8b76d/cenc.mpd",
+      kid: "69a5aa835a061ce64a630d1046727e40",
+      key: "d02feac8a999bd06bf4059bf33411749"
     },
-    "bein1_au2": {
-      type: "dash",
-      url: "https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "335dad778109954503dcbb21dc92015f": "24bfd75d436cbf73168a2a2dccd40281" }
-    },
-    "bein2_au1": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "0b42be2664d7e811d04f3e504e0924c5": "ae24090123b8c72ac5404dc152847cb8" }
-    },
-    "bein2_au2": {
-      type: "dash",
-      url: "https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "0b42be2664d7e811d04f3e504e0924c5": "ae24090123b8c72ac5404dc152847cb8" }
-    },
-    "bein3_au1": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "7995c724a13748ed970840a8ab5bb9b3": "67bdaf1e2175b9ff682fcdf0e2354b1e" }
-    },
-    "bein3_au2": {
-      type: "dash",
-      url: "https://a83aivottlinear-a.akamaihd.net/OTTB/syd-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "7995c724a13748ed970840a8ab5bb9b3": "67bdaf1e2175b9ff682fcdf0e2354b1e" }
-    },
-
-    // === beIN Sports Malaysia ===
-    "bein1_my": {
-      type: "dash",
-      url: "https://ptv2026.com/myunifi.mpd?username=vip_3klp0es8&password=wg3piwEs&channel=Bein1&kid=d48b6088-253c-443e-b94d-27cb7828f707",
-      key: { "d48b6088253c443eb94d27cb7828f707": "e9776141f9e949273a072b0e035070ab" }
-    },
-    "bein2_my": {
-      type: "dash",
-      url: "https://ptv2026.com/myunifi.mpd?username=vip_3klp0es8&password=wg3piwEs&channel=Bein2&kid=efa6ff1a-cefa-4304-8e8b-7adc21d98871",
-      key: { "efa6ff1acefa43048e8b7adc21d98871": "5d0f448b52a92035e3763c4a60275933" }
-    },
-    "bein3_my": {
-      type: "dash",
-      url: "https://ptv2026.com/myunifi.mpd?username=vip_3klp0es8&password=wg3piwEs&channel=Bein3&kid=816ee2f7-c19f-49ed-8427-6f34541b465b",
-      key: { "816ee2f7c19f49ed84276f34541b465b": "ca764a9973b6123a1112cffd3b32010d" }
-    },
-    "bein4_my": {
-      type: "dash",
-      url: "https://ptv2026.com/myunifi.mpd?username=vip_3klp0es8&password=wg3piwEs&channel=Bein4&kid=d561ff97-6397-473e-9b45-6b44cdffcdd2",
-      key: { "d561ff976397473e9b456b44cdffcdd2": "2b6cff42f7fae7e8bc32f3d5c62dc3c2" }
-    },
-
-    // === TSN Channels ===
-    "tsn1": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/dash/enc/w0rehjjrwe/out/v1/69a2a7041395406b970598f61680e7cf/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-      key: { "14eeabf30c14b7fbf3008c03099ce011": "17d2ac8dbc5429bd70af3433aa12158d" }
-    },
-    "tsn2": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cjglydxghe/out/v1/8977baf175da4b94873194613dd3fe55/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-      key: { "85b277daf5aae05833fe43a68f587968": "d52d7e9bc0bcd98787efd547ac91eca0" }
-    },
-    "tsn3": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/lsibpqruq1/out/v1/748887d614a84913ba8bcdf3c82823e6/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-      key: { "d3250252765347a0c2603c6cb4869f8c": "0c19319460da7e9ed816db46ce839b37" }
-    },
-    "tsn4": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/ihys8nw4wv/out/v1/fde190f369484bc6b6117cc16cd82a9f/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-      key: { "abc5b2883121012850ebda05b528c5ec": "e5250924f4b738905f7163a0134587a7" }
-    },
-    "tsn5": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cscevwljkq/out/v1/972185041b244140860b7d56398e9aaf/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-      key: { "385ceb9714b75e0cef61254f80b31002": "18dce92a2891fee68d21ede5173230f8" }
-    },
-
-    // === UFC & Combat Sports ===
-    "ufc1": {
-      type: "hls",
-      url: "https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist_1920x1080.m3u8"
-    },
-    "ufc2": {
-      type: "dash",
-      url: "https://a151aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/8mxwjnh2te/out/v1/356704796c0c4bed81f67cd3518d0c8a/cenc.mpd",
-      key: { "a49085f8da5e65af1efff0edac830b1f": "4659bc58a85c062e3fe0c039a446fe47" }
-    },
-
-    // === MotoGP & Motorsports ===
-    "motogp_usa": {
-      type: "dash",
-      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/wjeweupwyc/out/v1/8197c8e055c94a868623653ac55c10bf/cenc.mpd",
-      key: { "e03f302ec4dabcccca82cc9f76731ec9": "53ea1027d2bf2893a552cf15bc0366de" }
-    },
-    "tnt_sports2": {
-      type: "dash",
+    "tnt2": {
+      name: "TNT Sports 2",
       url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/puehlftk5j/out/v1/f7f0da1ee112481ca0024e6d4dd97f4a/cenc.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
-      key: { "f3df7843080ae743bf865dc5fdf64c68": "567c863bc12eb74788ea74888c042e1b" }
+      kid: "f3df7843080ae743bf865dc5fdf64c68",
+      key: "567c863bc12eb74788ea74888c042e1b"
     },
-    "spotv2_my": {
-      type: "dash",
-      url: "https://ptv2026.com/myunifi.mpd?username=vip_3klp0es8&password=wg3piwEs&channel=spoTV2&kid=1af079fb-8e1d-43d8-90c1-d804431ad84c",
-      key: { "1af079fb8e1d43d890c1d804431ad84c": "3dc40bc5aaf09af8b1572646a45b1242" }
+    "tnt3": {
+      name: "TNT Sports 3",
+      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/dev1hjwzh9/out/v1/a5f0ee7ad7b24906b14f43bebbbe4678/cenc.mpd",
+      kid: "cc91508324ce9dcaf425a43d58f1d9d4",
+      key: "643e5474d9edd87c7d9091c8c97994ca"
     },
-    "spotv2_pldt": {
-      type: "dash",
-      url: "https://qp-pldt-live-grp-13-prod.akamaized.net/out/u/dr_spotv2hd.mpd",
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      key: { "7eea72d6075245a99ee3255603d58853": "6848ef60575579bf4d415db1032153ed" }
+    "tnt4": {
+      name: "TNT Sports 4",
+      url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/tdijwiga2k/out/v1/f5fde318678f4f7583bf27b7231bde1f/cenc.mpd",
+      kid: "fa34fa8c90336dd528c7a23871cad1fe",
+      key: "552a78d1aeb74f1650d68255c5749408"
     }
   };
 
-  async function initApp() {
-    shaka.polyfill.installAll();
-    const video = document.getElementById('video');
-    shakaPlayer = new shaka.Player(video);
+  let player;
 
-    shakaPlayer.addEventListener('error', (event) => {
-      console.error('Shaka Error Code:', event.detail.code, event.detail);
-    });
-
+  document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi Player & Plugin EME
+    player = videojs('tnt-player');
+    player.eme();
+    
     playSelectedChannel();
-  }
+  });
 
-  async function playSelectedChannel() {
+  function playSelectedChannel() {
     const key = document.getElementById('channelSelect').value;
     const item = channels[key];
-    const video = document.getElementById('video');
     const infoBox = document.getElementById('channelInfo');
 
-    infoBox.innerHTML = `<b>Status:</b> Memuatkan...<br><b>URL:</b> ${item.url}`;
+    infoBox.innerHTML = `<b>Status:</b> Memuatkan ${item.name}...<br><b>URL:</b> ${item.url}`;
 
-    // Reset Pemain
-    if (hlsPlayer) {
-      hlsPlayer.destroy();
-      hlsPlayer = null;
-    }
-    await shakaPlayer.unload();
+    // Sediakan Kunci ClearKey
+    const base64Kid = hexToBase64Url(item.kid);
+    const base64Key = hexToBase64Url(item.key);
 
-    if (item.type === "dash") {
-      if (item.key) {
-        shakaPlayer.configure({
-          drm: { clearKeys: item.key }
-        });
+    // Tetapkan Sumber Stream & Konfigurasi DRM ClearKey
+    player.src({
+      src: item.url,
+      type: 'application/dash+xml',
+      keySystems: {
+        'org.w3.clearkey': {
+          clearkeys: {
+            [base64Kid]: base64Key
+          },
+          // Callback bypass untuk mengelakkan ralat getLicense
+          getLicense: function(emeOptions, keyMessage, callback) {
+            callback(null, keyMessage);
+          }
+        }
       }
+    });
 
-      try {
-        await shakaPlayer.load(item.url);
-        infoBox.innerHTML = `<b>Status:</b> Berjaya Dimainkan (DASH)<br><b>KID/Key applied:</b> Yes`;
-      } catch (e) {
-        infoBox.innerHTML = `<span style="color: #ef4444;"><b>Ralat:</b> Tidak boleh diputar secara terus dari pelayar. Perlu lalu CacheProxy untuk melepas sekatan User-Agent/CORS!</span>`;
-      }
-    } else if (item.type === "hls") {
-      if (Hls.isSupported()) {
-        hlsPlayer = new Hls();
-        hlsPlayer.loadSource(item.url);
-        hlsPlayer.attachMedia(video);
-        infoBox.innerHTML = `<b>Status:</b> Berjaya Dimainkan (HLS)`;
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = item.url;
-        infoBox.innerHTML = `<b>Status:</b> Berjaya Dimainkan (HLS Native)`;
-      }
-    }
+    player.play();
+    infoBox.innerHTML = `<b>Status:</b> Berjaya Dimainkan (DASH + ClearKey DRM)<br><b>Saluran:</b> ${item.name}`;
   }
-
-  document.addEventListener('DOMContentLoaded', initApp);
 </script>
-
-<!-- AUTO-DETECT TRACKER LINKS (Disediakan khas untuk skrip pengesan automatik) -->
-<!-- 
-/channel/bein1_au1.mpd
-/channel/bein1_au2.mpd
-/channel/bein2_au1.mpd
-/channel/bein2_au2.mpd
-/channel/bein3_au1.mpd
-/channel/bein3_au2.mpd
-/channel/bein1_my.mpd
-/channel/bein2_my.mpd
-/channel/bein3_my.mpd
-/channel/bein4_my.mpd
-/channel/tsn1.mpd
-/channel/tsn2.mpd
-/channel/tsn3.mpd
-/channel/tsn4.mpd
-/channel/tsn5.mpd
-/channel/ufc1.m3u8
-/channel/ufc2.mpd
-/channel/motogp_usa.mpd
-/channel/tnt_sports2.mpd
-/channel/spotv2_my.mpd
-/channel/spotv2_pldt.mpd
-https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd
-https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/ghwcl6hv68/out/v1/83536910d8034e9b9895a20fbe1c1687/cenc.mpd
-https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd
-https://otte.live.fly.ww.aiv-cdn.net/syd-nitro/live/clients/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd
-https://otte.cache.aiv-cdn.net/syd-nitro/live/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd
-https://a83aivottlinear-a.akamaihd.net/OTTB/syd-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd
-https://ptv2026.com/myunifi.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/dash/enc/w0rehjjrwe/out/v1/69a2a7041395406b970598f61680e7cf/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cjglydxghe/out/v1/8977baf175da4b94873194613dd3fe55/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/lsibpqruq1/out/v1/748887d614a84913ba8bcdf3c82823e6/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/ihys8nw4wv/out/v1/fde190f369484bc6b6117cc16cd82a9f/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/cscevwljkq/out/v1/972185041b244140860b7d56398e9aaf/cenc.mpd
-https://linear-893.frequency.stream/dist/xumo/893/hls/master/playlist_1920x1080.m3u8
-https://a151aivottlinear-a.akamaihd.net/OTTB/lhr-nitro/live/clients/dash/enc/8mxwjnh2te/out/v1/356704796c0c4bed81f67cd3518d0c8a/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/wjeweupwyc/out/v1/8197c8e055c94a868623653ac55c10bf/cenc.mpd
-https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/puehlftk5j/out/v1/f7f0da1ee112481ca0024e6d4dd97f4a/cenc.mpd
-https://qp-pldt-live-grp-13-prod.akamaized.net/out/u/dr_spotv2hd.mpd
--->
 
 </body>
 </html>
