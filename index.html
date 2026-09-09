@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TNT Sports Player (Video.js ClearKey)</title>
+  <title>TNT Sports Player</title>
 
   <!-- Video.js CSS -->
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
@@ -25,7 +25,6 @@
       background-color: #1e293b;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .video-js {
       width: 100%;
@@ -38,37 +37,33 @@
       display: flex;
       gap: 10px;
     }
+    select, button {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
     select {
       flex: 1;
-      padding: 10px;
       background-color: #334155;
       color: #fff;
-      border: 1px solid #475569;
-      border-radius: 5px;
-      font-size: 14px;
     }
     button {
-      padding: 10px 20px;
       background-color: #2563eb;
       color: #fff;
-      border: none;
-      border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
     }
-    button:hover { background-color: #1d4ed8; }
     .info {
       margin-top: 10px;
       font-size: 12px;
       color: #94a3b8;
-      word-break: break-all;
     }
   </style>
 </head>
 <body>
 
 <div class="player-container">
-  <h2>TNT Sports Channels (Video.js ClearKey DRM)</h2>
+  <h2>TNT Sports Channels</h2>
   
   <video id="tnt-player" class="video-js vjs-default-skin" controls autoplay preload="auto"></video>
 
@@ -85,54 +80,41 @@
   <div class="info" id="channelInfo"></div>
 </div>
 
-<!-- Video.js JS -->
+<!-- Scripts -->
 <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<!-- Video.js EME Plugin (Untuk DRM / ClearKey) -->
-<script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@5.4.0/dist/videojs-contrib-eme.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/videojs-shaka-player@1.0.0/dist/videojs-shaka-player.min.js"></script>
 
 <script>
-  // Format ClearKey Hex ke Base64URL untuk standard EME Video.js
-  function hexToBase64Url(hexStr) {
-    const bytes = new Uint8Array(hexStr.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    let binary = '';
-    bytes.forEach(b => binary += String.fromCharCode(b));
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  }
-
-  // Data Saluran TNT Sports
   const channels = {
     "tnt1": {
       name: "TNT Sports 1",
       url: "https://otte.cache.aiv-cdn.net/iad-nitro/live/clients/dash/enc/rhf2dwosdt/out/v1/ee550d2a68d846c797e6ce4de2e8b76d/cenc.mpd",
-      kid: "69a5aa835a061ce64a630d1046727e40",
-      key: "d02feac8a999bd06bf4059bf33411749"
+      key: { "69a5aa835a061ce64a630d1046727e40": "d02feac8a999bd06bf4059bf33411749" }
     },
     "tnt2": {
       name: "TNT Sports 2",
       url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/puehlftk5j/out/v1/f7f0da1ee112481ca0024e6d4dd97f4a/cenc.mpd",
-      kid: "f3df7843080ae743bf865dc5fdf64c68",
-      key: "567c863bc12eb74788ea74888c042e1b"
+      key: { "f3df7843080ae743bf865dc5fdf64c68": "567c863bc12eb74788ea74888c042e1b" }
     },
     "tnt3": {
       name: "TNT Sports 3",
       url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/dev1hjwzh9/out/v1/a5f0ee7ad7b24906b14f43bebbbe4678/cenc.mpd",
-      kid: "cc91508324ce9dcaf425a43d58f1d9d4",
-      key: "643e5474d9edd87c7d9091c8c97994ca"
+      key: { "cc91508324ce9dcaf425a43d58f1d9d4": "643e5474d9edd87c7d9091c8c97994ca" }
     },
     "tnt4": {
       name: "TNT Sports 4",
       url: "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/tdijwiga2k/out/v1/f5fde318678f4f7583bf27b7231bde1f/cenc.mpd",
-      kid: "fa34fa8c90336dd528c7a23871cad1fe",
-      key: "552a78d1aeb74f1650d68255c5749408"
+      key: { "fa34fa8c90336dd528c7a23871cad1fe": "552a78d1aeb74f1650d68255c5749408" }
     }
   };
 
   let player;
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi Player & Plugin EME
-    player = videojs('tnt-player');
-    player.eme();
+    player = videojs('tnt-player', {
+      techOrder: ['shaka', 'html5']
+    });
     
     playSelectedChannel();
   });
@@ -142,31 +124,20 @@
     const item = channels[key];
     const infoBox = document.getElementById('channelInfo');
 
-    infoBox.innerHTML = `<b>Status:</b> Memuatkan ${item.name}...<br><b>URL:</b> ${item.url}`;
+    infoBox.innerHTML = `<b>Status:</b> Memuatkan ${item.name}...`;
 
-    // Sediakan Kunci ClearKey
-    const base64Kid = hexToBase64Url(item.kid);
-    const base64Key = hexToBase64Url(item.key);
-
-    // Tetapkan Sumber Stream & Konfigurasi DRM ClearKey
     player.src({
       src: item.url,
       type: 'application/dash+xml',
       keySystems: {
         'org.w3.clearkey': {
-          clearkeys: {
-            [base64Kid]: base64Key
-          },
-          // Callback bypass untuk mengelakkan ralat getLicense
-          getLicense: function(emeOptions, keyMessage, callback) {
-            callback(null, keyMessage);
-          }
+          clearKeys: item.key
         }
       }
     });
 
     player.play();
-    infoBox.innerHTML = `<b>Status:</b> Berjaya Dimainkan (DASH + ClearKey DRM)<br><b>Saluran:</b> ${item.name}`;
+    infoBox.innerHTML = `<b>Status:</b> Dimainkan<br><b>Saluran:</b> ${item.name}`;
   }
 </script>
 
